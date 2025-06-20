@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>VaYU Chatbot</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Calibri:wght@400;600&display=swap');
+
+    body {
+      font-family: 'Calibri', sans-serif;
+    }
+
+    #chat-toggle {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #f37021;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 9999;
+    }
+
+    #vayu-greeting {
+      position: fixed;
+      bottom: 30px;
+      right: 90px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      z-index: 9998;
+    }
+
+    #vayu-greeting.hidden {
+      display: none;
+    }
+
+    #vayu-greeting button {
+      background: red;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+
+    #chatbox {
+      display: none;
+      width: 320px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      background-color: #f9f9f9;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      z-index: 9999;
+    }
+
+    #chatbox-header {
+      background-color: #f37021;
+      color: white;
+      padding: 10px;
+      font-weight: bold;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+      text-align: center;
+      position: relative;
+    }
+
+    .header-buttons {
+      position: absolute;
+      top: 6px;
+      right: 10px;
+    }
+
+    .header-buttons button {
+      background: white;
+      border: none;
+      color: #f37021;
+      font-size: 14px;
+      margin-left: 5px;
+      cursor: pointer;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      line-height: 20px;
+      padding: 0;
+    }
+
+    #chatbox-logo {
+      display: block;
+      margin: 10px auto;
+      width: 200px;
+    }
+
+    #chatlog {
+      padding: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .msg {
+      display: flex;
+      align-items: flex-start;
+      margin: 10px 0;
+    }
+
+    .msg.bot img, .msg.user img {
+      width: 30px;
+      height: 30px;
+      margin-right: 8px;
+      border-radius: 50%;
+    }
+
+    .msg-text {
+      background-color: #fff;
+      padding: 8px 12px;
+      border-radius: 10px;
+      max-width: 220px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      font-size: 14px;
+    }
+
+    .msg.user {
+      flex-direction: row-reverse;
+    }
+
+    .msg.user .msg-text {
+      background-color: #e8f5e9;
+    }
+
+    .msg.user img {
+      margin-left: 8px;
+      margin-right: 0;
+    }
+
+    .options {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      padding: 0 10px 10px;
+    }
+
+    .options button {
+      margin: 5px 0;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+      background-color: #f37021;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      max-width: fit-content;
+    }
+
+    .options input[type="email"] {
+      margin-top: 5px;
+      padding: 8px;
+      width: 90%;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-family: 'Calibri', sans-serif;
+      font-size: 14px;
+    }
+
+    a {
+      color: #f37021;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+<div id="vayu-greeting">
+  <button onclick="dismissGreeting()">×</button>
+  <div>
+    <strong>Namaste</strong>, I am your yoga assistant.<br>How can I help you?
+  </div>
+</div>
+
+<button id="chat-toggle" onclick="toggleChat()">💬</button>
+
+<div id="chatbox">
+  <div id="chatbox-header">
+    VaYU Assistant
+    <div class="header-buttons">
+      <button onclick="minimizeChat()">–</button>
+      <button onclick="location.reload()">⟳</button>
+    </div>
+  </div>
+  <img id="chatbox-logo" src="https://vayuusa.org/wp-content/uploads/2022/05/cropped-vayu-logo-1st-yoga-university-outside-india-393x200-1-300x153.png" alt="VaYU Logo" />
+  <div id="chatlog"></div>
+  <div id="options" class="options"></div>
+</div>
+
+<script>
+  const chatbox = document.getElementById("chatbox");
+  const greeting = document.getElementById("vayu-greeting");
+  const chatlog = document.getElementById("chatlog");
+  const options = document.getElementById("options");
+  let chatStarted = false;
+  let previousMenus = [];
+
+  function dismissGreeting() {
+    greeting.classList.add("hidden");
+    toggleChat();
+    startChat();
+  }
+
+  function toggleChat() {
+    if (chatbox.style.display === "none") {
+      chatbox.style.display = "block";
+      greeting.classList.add("hidden");
+      if (!chatStarted) startChat();
+    } else {
+      chatbox.style.display = "none";
+      greeting.classList.remove("hidden");
+    }
+  }
+
+  function minimizeChat() {
+    chatbox.style.display = "none";
+    greeting.classList.remove("hidden");
+  }
+
+  function showMessage(msg, sender = "bot", isHTML = false) {
+    const div = document.createElement("div");
+    div.className = "msg " + sender;
+    const img = document.createElement("img");
+    img.src = sender === "user" ? "icon/user.png" : "icon/yoga.png";
+    const span = document.createElement("div");
+    span.className = "msg-text";
+    if (isHTML) {
+      span.innerHTML = msg;
+    } else {
+      span.textContent = msg;
+    }
+    div.appendChild(img);
+    div.appendChild(span);
+    chatlog.appendChild(div);
+    chatlog.scrollTop = chatlog.scrollHeight;
+  }
+
+  function showOptions(buttons) {
+    options.innerHTML = "";
+    previousMenus.push(buttons);
+    buttons.forEach(({ text, next }) => {
+      const btn = document.createElement("button");
+      btn.textContent = text;
+      btn.onclick = () => {
+        showMessage(text, "user");
+        next();
+      };
+      options.appendChild(btn);
+    });
+    if (previousMenus.length > 1) {
+      const backBtn = document.createElement("button");
+      backBtn.textContent = "Back";
+      backBtn.onclick = () => {
+        previousMenus.pop();
+        const lastMenu = previousMenus[previousMenus.length - 1];
+        showOptions(lastMenu);
+      };
+      options.appendChild(backBtn);
+    }
+    const exitBtn = document.createElement("button");
+    exitBtn.textContent = "Exit";
+    exitBtn.onclick = () => askEmail();
+    options.appendChild(exitBtn);
+  }
+
+  function askEmail() {
+    showMessage("Please enter your email address to complete the conversation:");
+    options.innerHTML = "";
+    const input = document.createElement("input");
+    input.type = "email";
+    input.placeholder = "your@email.com";
+    const submit = document.createElement("button");
+    submit.textContent = "Submit";
+    submit.onclick = () => {
+      if (input.value.match(/^\S+@\S+\.\S+$/)) {
+        showMessage("Thank you! We'll be in touch at " + input.value);
+        options.innerHTML = "";
+      } else {
+        showMessage("Invalid email. Please try again.");
+      }
+    };
+    options.appendChild(input);
+    options.appendChild(submit);
+  }
+
+  function programDetails() {
+    showMessage("What would you like to know about the programs?");
+    showOptions([
+      {
+        text: "MS Yoga Program",
+        next: () => showMessage(
+          `The MS in Yoga is a 2-year research-oriented degree focused on traditional and scientific aspects of Yoga.<br><a href="https://vayuusa.org/academics/programs/online-master-of-science-in-yoga/" target="_blank">Click here to learn more</a>`,
+          "bot",
+          true
+        )
+      },
+      { text: "PhD Program", next: () => showMessage("PhD in Yoga is designed for advanced research and requires a Master's degree for eligibility.") },
+      { text: "Course Curriculum", next: () => showMessage("Curriculum includes Sanskrit, Philosophy, Research Methods, and Yoga Therapy.") },
+    ]);
+  }
+
+  function admissionsInfo() {
+    showMessage("What do you want to know about Admissions?");
+    showOptions([
+      { text: "Eligibility", next: () => showMessage("A bachelor's degree is required for MS, and a master's for PhD. International students welcome.") },
+      { text: "Application Process", next: () => showMessage("You can apply online at vayuusa.org/apply. Deadlines vary by semester.") },
+      { text: "Fees and Scholarships", next: () => showMessage("Tuition is $9,200/year. Varies by semester") },
+    ]);
+  }
+
+  function eventsInfo() {
+    showMessage("Here are some upcoming events:");
+    showMessage("📅 International Yoga Day – June 21");
+    showMessage("📅 Virtual Graduation – July 12");
+  }
+
+  function contactSupport() {
+    showMessage("How can we help you?");
+    showOptions([
+      { text: "Email Support", next: () => showMessage("You can email us at support@vayuusa.org") },
+      { text: "Tech Issues", next: () => showMessage("Please describe your issue. Our team will respond within 24 hrs.") },
+    ]);
+  }
+
+  function startChat() {
+    chatStarted = true;
+    previousMenus = [];
+    showMessage("Welcome to VaYU! How can I assist you today?");
+    showOptions([
+      { text: "Admissions", next: admissionsInfo },
+      { text: "Programs", next: programDetails },
+      { text: "Events", next: eventsInfo },
+      { text: "Contact / Support", next: contactSupport }
+    ]);
+  }
+</script>
+</body>
+</html>
