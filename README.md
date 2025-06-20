@@ -7,13 +7,12 @@ A lightweight web-based chatbot interface for Vivekananda Yoga University (VaYU)
 ## Features
 
 - Floating button chatbot UI
-- Welcome greeting with dismiss option
+- Welcome greeting
 - Menu-based chat with predefined options
 - Dynamic replies for Programs, Admissions, Events, and Support
 - Supports clickable links (e.g., to MS Yoga program)
-- Custom icons for bot and user messages
-- YouTube video embedded instead of static logo
-- Collects email on exit for follow-up
+- VaYU Intro youTube video embedded
+- Static as of now
 
 ---
 
