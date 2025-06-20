@@ -98,10 +98,11 @@
       padding: 0;
     }
 
-    #chatbox-logo {
+    #chatbox-video {
       display: block;
-      margin: 10px auto;
-      width: 200px;
+      margin: 0 auto 10px;
+      width: 100%;
+      height: 200px;
     }
 
     #chatlog {
@@ -199,7 +200,13 @@
       <button onclick="location.reload()">⟳</button>
     </div>
   </div>
-  <img id="chatbox-logo" src="https://vayuusa.org/wp-content/uploads/2022/05/cropped-vayu-logo-1st-yoga-university-outside-india-393x200-1-300x153.png" alt="VaYU Logo" />
+  <iframe id="chatbox-video"
+    src="https://www.youtube.com/embed/G6CQI4NHUnM?start=11&autoplay=0&mute=1&rel=0"
+    title="VaYU Intro Video"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen>
+  </iframe>
   <div id="chatlog"></div>
   <div id="options" class="options"></div>
 </div>
