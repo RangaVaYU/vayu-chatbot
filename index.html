@@ -147,22 +147,23 @@
     }
 
     .options {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      padding: 0 10px 10px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 8px;
+      padding: 10px;
+      justify-content: center;
     }
 
     .options button {
-      margin: 5px 0;
-      padding: 6px 12px;
+      padding: 6px 10px;
       border-radius: 6px;
       border: 1px solid #aaa;
       background-color: #f37021;
       color: white;
       cursor: pointer;
       font-size: 14px;
-      max-width: fit-content;
+      white-space: normal;
+      text-align: center;
     }
 
     .options input[type="email"] {
@@ -226,7 +227,7 @@
   }
 
   function toggleChat() {
-    if (chatbox.style.display === "none") {
+    if (chatbox.style.display === "none" || chatbox.style.display === "") {
       chatbox.style.display = "block";
       greeting.classList.add("hidden");
       if (!chatStarted) startChat();
@@ -248,20 +249,17 @@
     img.src = sender === "user" ? "icon/user.png" : "icon/yoga.png";
     const span = document.createElement("div");
     span.className = "msg-text";
-    if (isHTML) {
-      span.innerHTML = msg;
-    } else {
-      span.textContent = msg;
-    }
+    span[isHTML ? 'innerHTML' : 'textContent'] = msg;
     div.appendChild(img);
     div.appendChild(span);
     chatlog.appendChild(div);
     chatlog.scrollTop = chatlog.scrollHeight;
   }
 
-  function showOptions(buttons) {
+  function showOptions(buttons, pushToHistory = true) {
     options.innerHTML = "";
-    previousMenus.push(buttons);
+    if (pushToHistory) previousMenus.push(buttons);
+
     buttons.forEach(({ text, next }) => {
       const btn = document.createElement("button");
       btn.textContent = text;
@@ -271,16 +269,22 @@
       };
       options.appendChild(btn);
     });
+
     if (previousMenus.length > 1) {
       const backBtn = document.createElement("button");
       backBtn.textContent = "Back";
       backBtn.onclick = () => {
         previousMenus.pop();
         const lastMenu = previousMenus[previousMenus.length - 1];
-        showOptions(lastMenu);
+        if (lastMenu) {
+          showOptions(lastMenu, false);
+        } else {
+          startChat();
+        }
       };
       options.appendChild(backBtn);
     }
+
     const exitBtn = document.createElement("button");
     exitBtn.textContent = "Exit";
     exitBtn.onclick = () => askEmail();
@@ -307,33 +311,57 @@
     options.appendChild(submit);
   }
 
+  function startChat() {
+    chatStarted = true;
+    previousMenus = [];
+    showMessage("Welcome to VaYU! How can I assist you today?");
+    showMainMenu();
+  }
+
+  function showMainMenu() {
+    const menu = [
+      { text: "Admissions", next: () => showMessage("Please visit the Admissions section at vayuusa.org for details.") },
+      { text: "Programs", next: programDetails },
+      { text: "Events", next: eventsInfo },
+      { text: "Contact / Support", next: contactSupport }
+    ];
+    showOptions(menu, false);
+  }
+
   function programDetails() {
-    showMessage("What would you like to know about the programs?");
+    showMessage("Which program would you like to know more about?");
     showOptions([
-      {
-        text: "MS Yoga Program",
-        next: () => showMessage(
-          `The MS in Yoga is a 2-year research-oriented degree focused on traditional and scientific aspects of Yoga.<br><a href="https://vayuusa.org/academics/programs/online-master-of-science-in-yoga/" target="_blank">Click here to learn more</a>`,
-          "bot",
-          true
-        )
-      },
-      { text: "PhD Program", next: () => showMessage("PhD in Yoga is designed for advanced research and requires a Master's degree for eligibility.") },
-      { text: "Course Curriculum", next: () => showMessage("Curriculum includes Sanskrit, Philosophy, Research Methods, and Yoga Therapy.") },
+      { text: "MS Yoga Program", next: msYogaMenu },
+      { text: "PhD Program", next: phdYogaMenu }
     ]);
   }
 
-  function admissionsInfo() {
-    showMessage("What do you want to know about Admissions?");
+  function msYogaMenu() {
+    showMessage("What would you like to know about the MS Yoga program?");
     showOptions([
-      { text: "Eligibility", next: () => showMessage("A bachelor's degree is required for MS, and a master's for PhD. International students welcome.") },
-      { text: "Application Process", next: () => showMessage("You can apply online at vayuusa.org/apply. Deadlines vary by semester.") },
-      { text: "Fees and Scholarships", next: () => showMessage("Tuition is $9,200/year. Varies by semester") },
+      { text: "Why MS in Yoga?", next: () => showMessage("Blends traditional yoga with modern research for careers in education, therapy, or PhD.") },
+      { text: "Career & Research Opportunities", next: () => showMessage("Become an educator, therapist, or pursue research globally.") },
+      { text: "Course Highlights", next: () => showMessage("Covers philosophy, Sanskrit, anatomy, therapy & research.") },
+      { text: "Eligibility", next: () => showMessage("Bachelor's degree required. Yoga background is helpful but not mandatory.") },
+      { text: "Application Process", next: () => showMessage('Apply online at <a href="https://vayuusa.org/apply" target="_blank">vayuusa.org/apply</a>. Include SOP, resume, transcripts.', "bot", true) },
+      { text: "Fees & Scholarships", next: () => showMessage("Approx. $9,200/year. Partial scholarships and payment plans available.") },
+      { text: "Certifications & Add-ons", next: () => showMessage("Yoga Therapy, Sanskrit intensives, and clinical training available.") }
+    ]);
+  }
+
+  function phdYogaMenu() {
+    showMessage("What would you like to know about the PhD in Yoga?");
+    showOptions([
+      { text: "Why PhD in Yoga?", next: () => showMessage("For advanced yoga research, academic careers, and leadership in wellness.") },
+      { text: "Eligibility", next: () => showMessage("Master’s in Yoga or related field required. Research interest expected.") },
+      { text: "Research Areas", next: () => showMessage("Yoga therapy, physiology, mental health, ancient texts, neuroscience, and more.") },
+      { text: "Coursework", next: () => showMessage("Focused on research methods, proposal development, and thesis.") },
+      { text: "Duration & Supervision", next: () => showMessage("Typically 3–5 years with one-on-one research mentorship.") },
+      { text: "Fees & Funding", next: () => showMessage("Competitive fee with options for assistantships and research fellowships.") }
     ]);
   }
 
   function eventsInfo() {
-    showMessage("Here are some upcoming events:");
     showMessage("📅 International Yoga Day – June 21");
     showMessage("📅 Virtual Graduation – July 12");
   }
@@ -342,21 +370,10 @@
     showMessage("How can we help you?");
     showOptions([
       { text: "Email Support", next: () => showMessage("You can email us at support@vayuusa.org") },
-      { text: "Tech Issues", next: () => showMessage("Please describe your issue. Our team will respond within 24 hrs.") },
-    ]);
-  }
-
-  function startChat() {
-    chatStarted = true;
-    previousMenus = [];
-    showMessage("Welcome to VaYU! How can I assist you today?");
-    showOptions([
-      { text: "Admissions", next: admissionsInfo },
-      { text: "Programs", next: programDetails },
-      { text: "Events", next: eventsInfo },
-      { text: "Contact / Support", next: contactSupport }
+      { text: "Tech Issues", next: () => showMessage("Please describe your issue. Our team will respond within 24 hrs.") }
     ]);
   }
 </script>
+
 </body>
 </html>
